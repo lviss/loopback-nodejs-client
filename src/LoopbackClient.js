@@ -20,6 +20,7 @@ class LoopbackClient {
     this.user = user;
     this.password = password;
     this.token = null;
+    this.userId = null;
     this.baseUrl = baseUrl;
     this.headers = {
       "Content-Type": "application/json",
@@ -37,6 +38,10 @@ class LoopbackClient {
 
   getToken() {
     return this.token;
+  }
+
+  getUserId() {
+    return this.userId;
   }
 
   setCustomLoginPath(path) {
@@ -74,6 +79,7 @@ class LoopbackClient {
           .then(handleErrors)
           .then(result => {
             this.token = result.id || result.data.id;
+            this.userId = result.userId || result.data.userId;
 
             debug('r=',result)
             resolve(this.token);
