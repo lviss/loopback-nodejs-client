@@ -48,46 +48,56 @@ class LoopbackClient {
     this.customLoginPath = path;
   }
 
+  fetchLogin(resolve, reject) {
+    const data = {
+      email: this.user,
+      password: this.password
+    };
+
+    const options = {
+      headers: this.headers
+    };
+
+    var url =
+      this.baseUrl +
+      (this.customLoginPath
+        ? this.customLoginPath
+        : "/users/login?include=user");
+
+    debug("post", url, data, this.headers);
+
+    fetch(url, {
+      method: "POST",
+      body: JSON.stringify(data),
+      headers: this.headers
+    })
+      .then(handleErrors)
+      .then(result => {
+        this.token = result.id || result.data.id;
+        this.userId = result.userId || result.data.userId;
+
+        debug('r=',result)
+        resolve(this.token);
+      })
+      .catch(error => {            
+        reject(error);
+      });
+  }
+
   createToken() {
     return new Promise((resolve, reject) => {
       if (this.token) {   
         debug('current token',this.token)    
         resolve(this.token);
       } else {
-        const data = {
-          email: this.user,
-          password: this.password
-        };
-
-        const options = {
-          headers: this.headers
-        };
-
-        var url =
-          this.baseUrl +
-          (this.customLoginPath
-            ? this.customLoginPath
-            : "/users/login?include=user");
-
-        debug("post", url, data, this.headers);
-
-        fetch(url, {
-          method: "POST",
-          body: JSON.stringify(data),
-          headers: this.headers
-        })
-          .then(handleErrors)
-          .then(result => {
-            this.token = result.id || result.data.id;
-            this.userId = result.userId || result.data.userId;
-
-            debug('r=',result)
-            resolve(this.token);
-          })
-          .catch(error => {            
-            reject(error);
-          });
+        this.fetchLogin(resolve, reject);
       }
+    });
+  }
+
+  refreshToken() {
+    return new Promise((resolve, reject) => {
+      this.fetchLogin(resolve, reject);
     });
   }
 
